@@ -2,6 +2,7 @@
 """Demonstration of the Obsidian Diary MCP Server functionality."""
 
 import sys
+import asyncio
 from pathlib import Path
 
 # Add src to path
@@ -12,9 +13,10 @@ from obsidian_diary_mcp.server import (
     read_entry,
     generate_reflection_prompts,
     find_related_entries,
+    extract_themes_and_topics,
 )
 
-def demo_template_creation():
+async def demo_template_creation():
     """Demonstrate template creation."""
     print("\n" + "="*70)
     print("🎯 DEMO: Creating a Diary Template")
@@ -30,7 +32,8 @@ def demo_template_creation():
     recent_contents = [read_entry(path) for _, path in recent_entries]
     
     # Generate reflection prompts
-    prompts = generate_reflection_prompts(recent_contents)
+    recent_text = "\n\n".join(recent_contents) if recent_contents else ""
+    prompts = await generate_reflection_prompts(recent_text)
     
     print("\n🤔 Generated Reflection Prompts:")
     for i, prompt in enumerate(prompts, 1):
@@ -43,7 +46,7 @@ def demo_template_creation():
     print("   ✓ Brain dump section for free writing")
     print("   ✓ Auto-generated backlinks placeholder")
 
-def demo_auto_tagging():
+async def demo_auto_tagging():
     """Demonstrate auto-tagging functionality."""
     print("\n" + "="*70)
     print("🔗 DEMO: Auto-Tagging with Backlinks")
@@ -58,7 +61,7 @@ def demo_auto_tagging():
         print(f"\n📄 Analyzing entry from {date.strftime('%Y-%m-%d')}...")
         
         # Find related entries
-        related = find_related_entries(content, exclude_date=date.strftime("%Y-%m-%d"))
+        related = await find_related_entries(content, exclude_date=date.strftime("%Y-%m-%d"))
         
         print(f"\n🎯 Found {len(related)} related entries:")
         for link in related:
@@ -70,7 +73,7 @@ def demo_auto_tagging():
         print("   3. Uses Jaccard similarity to find the best matches")
         print("   4. Automatically adds backlinks in Obsidian format")
 
-def demo_theme_extraction():
+async def demo_theme_extraction():
     """Demonstrate theme extraction."""
     print("\n" + "="*70)
     print("🧠 DEMO: Intelligent Theme Detection")
@@ -82,34 +85,35 @@ def demo_theme_extraction():
     
     for date, path in entries:
         content = read_entry(path)
-        from obsidian_diary_mcp.server import extract_themes_and_topics
-        themes = extract_themes_and_topics(content)
+        themes = await extract_themes_and_topics(content)
         
         print(f"   {date.strftime('%Y-%m-%d')}:")
         print(f"   → {', '.join(themes[:10])}")
         print()
 
-def main():
+async def main():
     print("\n" + "="*70)
     print("✨ Obsidian Diary MCP Server - Interactive Demo")
     print("="*70)
     print("\nThis demo shows how the MCP server helps you journal more effectively.")
     
-    demo_theme_extraction()
-    demo_template_creation()
-    demo_auto_tagging()
+    await demo_theme_extraction()
+    await demo_template_creation()
+    await demo_auto_tagging()
     
     print("\n" + "="*70)
     print("🚀 Next Steps")
     print("="*70)
     print("\n1. Configure Claude Desktop using CLAUDE_CONFIG.md")
-    print("2. Start using the tools through Claude:")
-    print("   - Ask Claude to 'create a diary template for today'")
-    print("   - Write your entry with Claude's help")
-    print("   - Save it with auto-generated backlinks")
+    print("\n2. Start using the sophisticated cognitive tools:")
+    print("   - Ask Claude to 'create a diary entry for today'")
+    print("   - Or focus analytically: 'create an entry focused on current struggles'")
+    print("   - Or: 'create an entry focused on cognitive patterns'")
+    print("   - Explore the intellectually rigorous prompts")
+    print("   - When done: 'ok done with today's entry' for auto-memory linking")
     print("\n3. Or test interactively with:")
     print("   uv run fastmcp dev src/obsidian_diary_mcp/server.py")
     print("\n" + "="*70 + "\n")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
