@@ -2,7 +2,7 @@
 
 Smart journaling with AI-powered prompts and automatic backlinks for Obsidian.
 
-**Features**: Dynamic reflection prompts • Smart backlinks • Adaptive templates • Theme detection
+**Features**: Dynamic reflection prompts • Smart backlinks • AI theme detection
 
 ## Quick Start
 
@@ -27,35 +27,52 @@ uv run fastmcp run src/obsidian_diary_mcp/server.py
 - **Working Directory**: `/path/to/this/repo`
 - **Environment**: `{"DIARY_PATH": "/path/to/your/diary"}`
 
-Then use naturally:
+## Daily Workflow
+
+1. **Create today's entry**:
+   ```bash
+   copilot "create diary entry file"
+   ```
+
+2. **Write in Obsidian** - file created with AI-generated prompts based on recent entries
+
+3. **Save with backlinks**:
+   ```bash
+   copilot "save diary entry with today's content"
+   ```
+   
+4. **Backlinks appear automatically** - refresh Obsidian to see connections
+
+**Other commands:**
 ```bash
-gh copilot chat "create a diary template for today"
-gh copilot chat "help me journal about my day"
+copilot "list recent entries"
+copilot "read diary entry for yesterday"
+copilot "refresh all backlinks"
 ```
 
 ## How It Works
 
-**Dynamic Prompts**: Analyzes your recent entries to generate personalized reflection questions (no hardcoded categories)
+**AI Prompts**: Uses LLM sampling to analyze your recent entries and generate personalized reflection questions
 
-**Smart Backlinks**: Uses content similarity to automatically link related entries with `[[YYYY-MM-DD]]` format
+**Smart Backlinks**: AI extracts themes from content to automatically link related entries with `[[YYYY-MM-DD]]` format
 
-**Adaptive**: Learns from your writing patterns and vocabulary over time
+**No Hardcoded Content**: Everything is dynamically generated based on your actual writing patterns
 
 ## Tools Available
 
-- `create_diary_template(date?)` - Generate template with dynamic prompts
+- `create_diary_template(date?)` - Generate template with AI prompts
+- `create_diary_entry_file(date?)` - Create file with AI prompts
 - `save_diary_entry(date, content)` - Save with auto-generated backlinks  
 - `read_diary_entry(date)` - Read existing entry
 - `list_recent_entries(count?)` - List recent entries
-- `update_entry_backlinks(date)` - Refresh backlinks
+- `update_entry_backlinks(date)` - Refresh backlinks for one entry
+- `refresh_all_backlinks()` - Refresh backlinks for all entries
 
 ## Configuration
 
 ```bash
 export DIARY_PATH="/path/to/diary"           # Required
-export RECENT_ENTRIES_COUNT=3                # How many recent entries to analyze
-export MAX_THEMES=15                         # Max themes per analysis
-export MIN_THEME_FREQUENCY=1                 # Min word frequency for themes
+export RECENT_ENTRIES_COUNT=3                # How many recent entries to analyze for prompts
 ```
 
 ## Entry Format
@@ -78,9 +95,5 @@ Your thoughts...
 ## Other MCP Clients
 
 Works with Claude Desktop and other MCP-compatible tools. See [MCP documentation](https://modelcontextprotocol.io/) for setup.
-
-## Non-English Support
-
-Update the `stop_words` set in `extract_themes_and_topics()` for your language.
 
 **License**: MIT • **Requirements**: Python 3.8+, FastMCP
