@@ -1,0 +1,12 @@
+{
+  "name": "obsidian-diary",
+  "command": "uv run fastmcp run src/obsidian_diary_mcp/server.py",
+  "args": [],
+  "cwd": "/Users/gps/Developer/obsidian-diary-mcp",
+  "env": {
+    "DIARY_PATH": "/Users/gps/Documents/diary",
+    "RECENT_ENTRIES_COUNT": "3",
+    "MAX_THEMES": "15",
+    "MIN_THEME_FREQUENCY": "1"
+  }
+}

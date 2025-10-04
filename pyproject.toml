@@ -1,0 +1,19 @@
+[project]
+name = "obsidian-diary-mcp"
+version = "0.1.0"
+description = "MCP server for Obsidian diary with smart templates and auto-tagging"
+readme = "README.md"
+authors = [
+    { name = "Gwyneth Pena-Siguenza", email = "gwynethpena@outlook.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastmcp>=2.12.4",
+]
+
+[project.scripts]
+obsidian-diary-mcp = "obsidian_diary_mcp:main"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
