@@ -76,6 +76,20 @@ cp .env.example .env
 
 ## Daily Workflow
 
+**Optional: Auto-approve diary tools Copilot example** 
+
+Add to `~/.config/copilot/config.json` (or `$XDG_CONFIG_HOME/copilot/config.json`):
+```json
+{
+  "allowedTools": ["diary"]
+}
+```
+
+Or pass it each time you start:
+```bash
+copilot --allow-tool "diary"
+```
+
 **1. Start your session:**
 ```bash
 copilot
