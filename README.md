@@ -154,7 +154,7 @@ The trace is saved as `memory-trace-YYYY-MM-DD.md` in your diary vault for easy 
 
 - **Local AI**: Ollama processes your entries locally—your journal content never leaves your machine
 - **AI CLI Interface**: Your CLI (Copilot, Claude Desktop, etc.) provides the interface via MCP protocol
-- **Smart Prompts**: Analyzes recent entries to generate contextual reflection questions
+- **Smart Prompts**: Analyzes the Brain Dump section (your actual reflections, not the prompts) to generate contextual questions based on what you wrote
 - **Auto-linking**: Creates temporal `[[YYYY-MM-DD]]` and topic `#tag` connections  
 - **Caching**: Stores theme analysis in-memory to avoid redundant AI calls
 - **Sunday Special**: 5 prompts synthesizing the past 7 calendar days (vs. 3 prompts from recent entries normally)

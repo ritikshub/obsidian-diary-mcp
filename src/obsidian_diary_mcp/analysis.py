@@ -13,18 +13,52 @@ class AnalysisEngine:
     def __init__(self):
         self._theme_cache = {}
     
-    async def extract_themes_and_topics(self, content: str) -> List[str]:
-        """Extract key themes from diary entry content."""
-        content_without_links = re.sub(
-            r"\*\*Related entries:\*\*.*$", "", content, flags=re.DOTALL
+    def _extract_brain_dump(self, content: str) -> str:
+        """Extract the Brain Dump section which contains actual reflections (not prompts)."""
+        # Try to find Brain Dump section
+        brain_dump_match = re.search(
+            r'##\s*(?:💭\s*)?Brain Dump\s*\n+(.*?)(?=\n##|\Z)', 
+            content, 
+            re.DOTALL | re.IGNORECASE
         )
+        
+        if brain_dump_match:
+            brain_dump = brain_dump_match.group(1).strip()
+            # Remove placeholder text
+            brain_dump = re.sub(
+                r'\*Your thoughts, experiences, and observations\.\.\.\*',
+                '',
+                brain_dump
+            ).strip()
+            return brain_dump
+        
+        return ""
+    
+    async def extract_themes_and_topics(self, content: str) -> List[str]:
+        """Extract key themes from diary entry content, prioritizing Brain Dump section."""
+        # First, try to extract just the Brain Dump (actual reflections, not prompts)
+        brain_dump = self._extract_brain_dump(content)
+        
+        # If we have substantial brain dump content, prioritize it
+        if len(brain_dump) > 50:
+            analysis_content = brain_dump
+            print(f"🎯 Analyzing Brain Dump section ({len(brain_dump)} chars) for themes...")
+        else:
+            # Fallback to full content but remove links section
+            analysis_content = re.sub(
+                r"\*\*Related entries:\*\*.*$", "", content, flags=re.DOTALL
+            )
+            analysis_content = re.sub(
+                r"##\s*🔗\s*Memory Links.*$", "", analysis_content, flags=re.DOTALL
+            )
+            print(f"⚠️ No substantial Brain Dump found, analyzing full entry...")
 
-        if len(content_without_links.strip()) < 20:
+        if len(analysis_content.strip()) < 20:
             return []
 
         prompt = f"""Analyze this journal entry and extract 3-5 key themes or topics.
 
-Entry content: {content}
+Entry content: {analysis_content}
 
 Return ONLY the themes as a simple comma-separated list with no other text:
 friendship, work-stress, creativity"""
@@ -138,51 +172,36 @@ friendship, work-stress, creativity"""
         if len(recent_content.strip()) < 20:
             return []
 
-        # First, extract themes from the recent content to understand what topics exist
-        themes_identified = []
-        if not focus:
-            print("🔍 Analyzing themes in recent entries to ensure diverse prompts...")
-            themes_identified = await self.extract_themes_and_topics(recent_content)
-            print(f"📊 Themes found: {', '.join(themes_identified) if themes_identified else 'none detected'}")
-
         focus_instruction = ""
         if focus:
-            focus_instruction = f"\n\nSPECIAL FOCUS: Generate ALL {count} questions specifically about {focus}. Tailor every question to help explore this area deeply."
-        elif themes_identified:
-            # Use the extracted themes to guide diverse question generation
-            themes_list = ', '.join(themes_identified[:6])  # Use top 6 themes
-            focus_instruction = f"\n\nCRITICAL INSTRUCTION: The recent entries discuss these DIFFERENT themes: {themes_list}. You MUST generate {count} questions that cover AT LEAST {min(count, len(themes_identified))} DIFFERENT themes from this list. DO NOT generate multiple questions about the same theme. Ensure variety across different life areas."
-        else:
-            focus_instruction = f"\n\nIMPORTANT: Generate {count} questions that cover DIFFERENT areas of life mentioned in the content. Avoid focusing on just one topic - spread questions across work, relationships, health, personal growth, hobbies, etc."
+            focus_instruction = f"\n\nFocus specifically on {focus} for all questions."
         
         weekly_instruction = ""
         if is_sunday:
-            weekly_instruction = "\n\nThis is a Sunday reflection - focus on synthesizing insights from the past week and setting intentions for alignment and refocusing in the upcoming week."
+            weekly_instruction = "\n\nThis is a Sunday reflection - synthesize the past week and set intentions for the week ahead."
 
-        # Use full content - don't truncate (the AI can handle it and needs full context for theme diversity)
-        prompt = f"""Based on this recent journal content, generate {count} reflection questions. Write them directly and personally - use "you" and "your" to address the person.{focus_instruction}{weekly_instruction}
+        # Use full content - don't truncate (the AI can handle it and needs full context)
+        prompt = f"""Read through this recent journal content and generate {count} thoughtful reflection questions.{focus_instruction}{weekly_instruction}
 
-        Recent content:
-        {recent_content}
-        
-        Write questions that:
-        - Are direct and conversational, not academic
-        - Focus on personal experience and feelings, not abstract theory
-        - Use simple, clear language
-        - Ask about specific situations and choices
-        - Help notice patterns without being overly analytical
-        {"- Look back at the past week and ahead to the next one" if is_sunday else ""}
-        - Each question MUST be about a DIFFERENT theme or life area
-        - Avoid generating multiple questions about the same topic
-        
-        Format as numbered questions without additional text:
-        {chr(10).join([f"{i}. [direct personal question about a different theme]" for i in range(1, count + 1)])}"""
+Recent content:
+{recent_content}
+
+Your task:
+- Read carefully and notice what topics appear
+- Identify areas that seem unresolved, in transition, or worth exploring deeper
+- Generate {count} questions about DIFFERENT topics - spread them across the variety of themes present
+- Write questions that are personal, direct, and conversational (use "you" and "your")
+- Ask about specific situations and feelings, not abstract concepts
+- Each question should address a different area of their life
+
+Format as numbered questions ONLY:
+{chr(10).join([f"{i}. [question]" for i in range(1, count + 1)])}"""
 
         try:
-            print("🤖 Generating diverse prompts with Ollama...")
+            print("🤖 Generating thoughtful prompts with Ollama...")
             response_text = await ollama_client.generate(
                 prompt, 
-                "You are a thoughtful journaling coach who helps people reflect on ALL aspects of their life. Generate personal questions that cover DIFFERENT themes - never focus too much on one area. Ensure variety across work, relationships, health, personal interests, and growth. Use clear, simple language and address them as 'you'. Avoid academic or philosophical jargon."
+                "You are a perceptive journaling coach. Read the person's recent entries and identify what areas of their life seem to need more reflection or exploration. Generate questions about DIFFERENT topics - ensure variety across the themes you notice. Be thoughtful about what seems important or unresolved. Use simple, personal language."
             )
             print("✅ Ollama generation successful!")
         except Exception as e:
