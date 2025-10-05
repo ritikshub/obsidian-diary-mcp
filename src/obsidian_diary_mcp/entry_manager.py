@@ -58,13 +58,31 @@ class EntryManager:
         return self.diary_path / f"{filename}.md"
     
     def remove_existing_backlinks(self, content: str) -> str:
-        """Remove existing backlinks sections from content."""
+        """Remove existing backlinks sections from content (including placeholder sections)."""
+        # Remove old-style backlinks
         content = re.sub(r"---\n\*\*Related entries:\*\*.*$", "", content, flags=re.DOTALL)
         content = re.sub(r"---\n\*\*Memory links:\*\*.*$", "", content, flags=re.DOTALL)
+        
+        # Remove placeholder Memory Links section (with or without emoji)
+        content = re.sub(
+            r"---\s*##\s*(?:🔗\s*)?Memory Links\s*\n+\*Temporal connections.*?\*",
+            "",
+            content,
+            flags=re.DOTALL | re.IGNORECASE
+        )
+        
+        # Remove any completed Memory Links section
+        content = re.sub(
+            r"---\s*##\s*(?:🔗\s*)?Memory Links\s*\n+.*?(?=\n---|\Z)",
+            "",
+            content,
+            flags=re.DOTALL | re.IGNORECASE
+        )
+        
         return content.rstrip()
     
     def add_memory_links(self, content: str, related: List[str], topic_tags: List[str]) -> str:
-        """Add memory links section to content."""
+        """Add memory links section to content, replacing any existing placeholder."""
         content = self.remove_existing_backlinks(content)
         
         memory_section = "\n\n---\n\n## 🔗 Memory Links\n\n"

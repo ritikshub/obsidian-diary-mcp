@@ -123,7 +123,7 @@ friendship, work-stress, creativity"""
         exclude_date: Optional[str] = None,
         max_related: int = 6,
     ) -> List[str]:
-        """Find related entries using cached theme analysis."""
+        """Find related entries using cached theme analysis (prioritizes Brain Dump content)."""
         current_themes = set(await self.get_themes_cached(current_content, exclude_date or "current"))
 
         if not current_themes:
@@ -132,7 +132,8 @@ friendship, work-stress, creativity"""
         entries = entry_manager.get_all_entries()
         similarity_scores = []
 
-        print(f"🔍 Analyzing {len(entries)} entries with cached themes...")
+        print(f"🔗 Finding related entries based on Brain Dump themes: {', '.join(list(current_themes)[:3])}...")
+        print(f"🔍 Analyzing {len(entries)} entries for connections...")
         
         for date, file_path in entries:
             if exclude_date and file_path.stem == exclude_date:
