@@ -146,27 +146,27 @@ friendship, work-stress, creativity"""
         if is_sunday:
             weekly_instruction = "\n\nThis is a Sunday reflection - focus on synthesizing insights from the past week and setting intentions for alignment and refocusing in the upcoming week."
 
-        prompt = f"""Based on this recent journal content, generate {count} intellectually rigorous questions for deep cognitive exploration. These should be the kind of questions a philosopher, or systems thinker would ask.{focus_instruction}{weekly_instruction}
+        prompt = f"""Based on this recent journal content, generate {count} reflection questions. Write them directly and personally - use "you" and "your" to address the person.{focus_instruction}{weekly_instruction}
 
         Recent content:
         {recent_content[:800]}
         
-        Create questions that:
-        - Probe underlying assumptions, mental models, and cognitive patterns
-        - Explore systems, interconnections, and deeper mechanisms
-        - Challenge surface-level thinking with analytical depth
-        - Connect personal experience to broader philosophical concepts
-        - Encourage meta-cognitive awareness and intellectual rigor
-        {"- Focus on weekly synthesis and upcoming alignment (Sunday reflection)" if is_sunday else ""}
+        Write questions that:
+        - Are direct and conversational, not academic
+        - Focus on personal experience and feelings, not abstract theory
+        - Use simple, clear language
+        - Ask about specific situations and choices
+        - Help notice patterns without being overly analytical
+        {"- Look back at the past week and ahead to the next one" if is_sunday else ""}
         
         Format as numbered questions without additional text:
-        {chr(10).join([f"{i}. [sophisticated analytical question]" for i in range(1, count + 1)])}"""
+        {chr(10).join([f"{i}. [direct personal question]" for i in range(1, count + 1)])}"""
 
         try:
             print("🤖 Attempting LLM generation with Ollama...")
             response_text = await ollama_client.generate(
                 prompt, 
-                "You are an expert philosopher and cognitive scientist. Generate intellectually rigorous questions that probe deep patterns, assumptions, and cognitive mechanisms."
+                "You are a thoughtful journaling coach. Generate personal, direct questions that help someone reflect on their experiences. Use clear, simple language and address them as 'you'. Avoid academic or philosophical jargon."
             )
             print("✅ Ollama generation successful!")
         except Exception as e:

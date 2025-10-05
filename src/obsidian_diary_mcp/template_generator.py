@@ -40,17 +40,17 @@ class TemplateGenerator:
         """Get fallback prompts when AI generation fails."""
         if is_sunday:
             return [
-                "What patterns from this past week reveal deeper truths about your cognitive frameworks?",
-                "How did your decision-making processes evolve throughout the week?",
-                "What assumptions about progress and growth were challenged this week?",
-                "Where do you need to realign your mental models for the upcoming week?",
-                "What philosophical questions emerged from this week's experiences that deserve deeper exploration?"
+                "What went well this week, and what felt hard?",
+                "What choices did you make that you want to remember?",
+                "What do you want to do differently next week?",
+                "What's one thing you learned about yourself?",
+                "What are you looking forward to or worried about?"
             ]
         else:
             return [
-                "What cognitive patterns or mental models shaped your thinking this period?",
-                "How do your current challenges reflect deeper philosophical questions about identity and meaning?",
-                "What assumptions about reality, success, or relationships are being tested right now?"
+                "What's on your mind right now?",
+                "What choices are you thinking about?",
+                "What felt good or difficult today?"
             ]
     
     def _build_template(self, prompts: List[str], is_sunday: bool) -> str:
