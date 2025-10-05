@@ -331,5 +331,59 @@ async def show_themes(
     return "\n".join(result)
 
 
+@mcp.tool(
+    annotations={
+        "title": "Create Memory Trace",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": False
+    }
+)
+async def create_memory_trace(
+    days: Annotated[int, Field(ge=1, le=365, description="Number of days to analyze (e.g., 30 for last month, 365 for last year)")] = 30,
+    save_to_file: Annotated[bool, "Whether to save the memory trace to a file in the diary directory"] = True
+) -> str:
+    """Generate a comprehensive Memory Trace document analyzing themes, patterns, and connections across your diary entries.
+    
+    This creates a detailed visualization of your journey including:
+    - Timeline overview with key themes
+    - Core themes with evolution tracking
+    - Relationship maps
+    - Pattern recognition
+    - Growth trajectories
+    - Wisdom extracted from entries
+    
+    Optionally saves to a markdown file in your diary directory for easy reference in Obsidian.
+    """
+    from .memory_trace import generate_memory_trace
+    
+    entries = entry_manager.get_all_entries()
+    
+    if not entries:
+        return "No memory logs found to analyze"
+    
+    cutoff_date = datetime.now() - timedelta(days=days)
+    recent_entries = [(date, path) for date, path in entries if date >= cutoff_date]
+    
+    if not recent_entries:
+        return f"No memory logs found in the last {days} days"
+    
+    print(f"🧠 Generating Memory Trace for {len(recent_entries)} entries from last {days} days...")
+    
+    trace_content = await generate_memory_trace(recent_entries, analysis_engine, entry_manager)
+    
+    if save_to_file:
+        trace_filename = f"memory-trace-{datetime.now().strftime('%Y-%m-%d')}.md"
+        trace_path = entry_manager.diary_path / trace_filename
+        
+        if entry_manager.write_entry(trace_path, trace_content):
+            return f"✨ **Memory Trace generated!**\n\n📊 Analyzed {len(recent_entries)} entries from the last {days} days\n📁 Saved to: {trace_path}\n\n💡 Open in Obsidian to explore your cognitive patterns, theme evolution, and personal growth trajectory!"
+        else:
+            return f"✨ Memory Trace generated but couldn't save to file.\n\n{trace_content}"
+    else:
+        return trace_content
+
+
 if __name__ == "__main__":
     mcp.run()

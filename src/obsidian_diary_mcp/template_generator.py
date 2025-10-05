@@ -20,9 +20,17 @@ class TemplateGenerator:
         """Generate template content for a diary entry."""
         is_sunday = entry_date.weekday() == 6
         
-        recent_count = 7 if is_sunday else RECENT_ENTRIES_COUNT
+        if is_sunday:
+            # For Sunday: get entries from the past 7 calendar days (actual week)
+            from datetime import timedelta
+            week_start = entry_date - timedelta(days=7)
+            all_entries = entry_manager.get_all_entries()
+            recent_entries = [(date, path) for date, path in all_entries if week_start <= date < entry_date]
+            print(f"📅 Sunday reflection: Found {len(recent_entries)} entries from past week ({week_start.strftime('%Y-%m-%d')} to {(entry_date - timedelta(days=1)).strftime('%Y-%m-%d')})")
+        else:
+            # For regular days: get last N entries
+            recent_entries = entry_manager.get_all_entries()[:RECENT_ENTRIES_COUNT]
         
-        recent_entries = entry_manager.get_all_entries()[:recent_count]
         recent_contents = [entry_manager.read_entry(path) for _, path in recent_entries]
         recent_text = "\n\n".join(recent_contents) if recent_contents else ""
         

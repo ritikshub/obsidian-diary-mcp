@@ -138,18 +138,32 @@ friendship, work-stress, creativity"""
         if len(recent_content.strip()) < 20:
             return []
 
+        # First, extract themes from the recent content to understand what topics exist
+        themes_identified = []
+        if not focus:
+            print("🔍 Analyzing themes in recent entries to ensure diverse prompts...")
+            themes_identified = await self.extract_themes_and_topics(recent_content)
+            print(f"📊 Themes found: {', '.join(themes_identified) if themes_identified else 'none detected'}")
+
         focus_instruction = ""
         if focus:
-            focus_instruction = f"\n\nSPECIAL FOCUS: Generate questions specifically related to {focus}. Tailor the questions to help explore this area deeply."
+            focus_instruction = f"\n\nSPECIAL FOCUS: Generate ALL {count} questions specifically about {focus}. Tailor every question to help explore this area deeply."
+        elif themes_identified:
+            # Use the extracted themes to guide diverse question generation
+            themes_list = ', '.join(themes_identified[:6])  # Use top 6 themes
+            focus_instruction = f"\n\nCRITICAL INSTRUCTION: The recent entries discuss these DIFFERENT themes: {themes_list}. You MUST generate {count} questions that cover AT LEAST {min(count, len(themes_identified))} DIFFERENT themes from this list. DO NOT generate multiple questions about the same theme. Ensure variety across different life areas."
+        else:
+            focus_instruction = f"\n\nIMPORTANT: Generate {count} questions that cover DIFFERENT areas of life mentioned in the content. Avoid focusing on just one topic - spread questions across work, relationships, health, personal growth, hobbies, etc."
         
         weekly_instruction = ""
         if is_sunday:
             weekly_instruction = "\n\nThis is a Sunday reflection - focus on synthesizing insights from the past week and setting intentions for alignment and refocusing in the upcoming week."
 
+        # Use full content - don't truncate (the AI can handle it and needs full context for theme diversity)
         prompt = f"""Based on this recent journal content, generate {count} reflection questions. Write them directly and personally - use "you" and "your" to address the person.{focus_instruction}{weekly_instruction}
 
         Recent content:
-        {recent_content[:800]}
+        {recent_content}
         
         Write questions that:
         - Are direct and conversational, not academic
@@ -158,15 +172,17 @@ friendship, work-stress, creativity"""
         - Ask about specific situations and choices
         - Help notice patterns without being overly analytical
         {"- Look back at the past week and ahead to the next one" if is_sunday else ""}
+        - Each question MUST be about a DIFFERENT theme or life area
+        - Avoid generating multiple questions about the same topic
         
         Format as numbered questions without additional text:
-        {chr(10).join([f"{i}. [direct personal question]" for i in range(1, count + 1)])}"""
+        {chr(10).join([f"{i}. [direct personal question about a different theme]" for i in range(1, count + 1)])}"""
 
         try:
-            print("🤖 Attempting LLM generation with Ollama...")
+            print("🤖 Generating diverse prompts with Ollama...")
             response_text = await ollama_client.generate(
                 prompt, 
-                "You are a thoughtful journaling coach. Generate personal, direct questions that help someone reflect on their experiences. Use clear, simple language and address them as 'you'. Avoid academic or philosophical jargon."
+                "You are a thoughtful journaling coach who helps people reflect on ALL aspects of their life. Generate personal questions that cover DIFFERENT themes - never focus too much on one area. Ensure variety across work, relationships, health, personal interests, and growth. Use clear, simple language and address them as 'you'. Avoid academic or philosophical jargon."
             )
             print("✅ Ollama generation successful!")
         except Exception as e:

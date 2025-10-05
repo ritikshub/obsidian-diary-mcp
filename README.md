@@ -66,7 +66,7 @@ cp .env.example .env
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `DIARY_PATH` | `~/Documents/diary` | Path to your diary vault |
-| `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze when creating a daily log (7 on Sundays) |
+f| `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze for regular days (Sundays use past 7 calendar days) |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_MODEL` | `llama3.1:latest` | LLM model to use |
 | `OLLAMA_TIMEOUT` | `30` | Request timeout in seconds |
@@ -119,6 +119,22 @@ copilot
 - `"show me themes from the last week"` - See recurring topics without exposing content
 - `"what themes have I been thinking about lately"` - Get theme analysis
 
+**6. Generate a Memory Trace (periodic review):**
+```
+"create a memory trace for the last 30 days"
+"generate a memory trace for the last 3 months"
+"create a memory trace analyzing the last year"
+```
+→ Creates a comprehensive analysis document with:
+  - Timeline visualization of your journey
+  - Core theme evolution across time periods
+  - Pattern recognition and recurring cycles
+  - Relationship maps and growth trajectories
+  - Wisdom extracted from your entries
+  - Significant moments timeline
+
+The trace is saved as `memory-trace-YYYY-MM-DD.md` in your diary vault for easy reference in Obsidian.
+
 **To read your entries:**
 - Open them directly in Obsidian (recommended for backlinks/graph)
 - Or view in any text editor—they're just markdown files in `DIARY_PATH`
@@ -141,7 +157,7 @@ copilot
 - **Smart Prompts**: Analyzes recent entries to generate contextual reflection questions
 - **Auto-linking**: Creates temporal `[[YYYY-MM-DD]]` and topic `#tag` connections  
 - **Caching**: Stores theme analysis in-memory to avoid redundant AI calls
-- **Sunday Special**: 5 prompts + weekly synthesis (vs. 3 prompts normally)
+- **Sunday Special**: 5 prompts synthesizing the past 7 calendar days (vs. 3 prompts from recent entries normally)
 
 
 ## Memory Log Format
