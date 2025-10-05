@@ -66,7 +66,7 @@ cp .env.example .env
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `DIARY_PATH` | `~/Documents/diary` | Path to your diary vault |
-f| `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze for regular days (Sundays use past 7 calendar days) |
+| `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze for regular days (Sundays use past 7 calendar days) |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_MODEL` | `llama3.1:latest` | LLM model to use |
 | `OLLAMA_TIMEOUT` | `30` | Request timeout in seconds |
