@@ -2,7 +2,7 @@
 
 Journaling unlocks mental clarity and space for growth. This system combines Obsidian with local AI to help you reflect deeply.
 
-**Privacy note:** Your diary content and AI analysis stay on your machine via Ollama. The AI CLI acts as an interface to create and link entries. To read your entries, open them directly in Obsidian or your text editor—don't use the CLI to avoid sending content to external APIs.
+**Privacy note:** Your diary content is processed locally by Ollama and never leaves your machine. GitHub Copilot CLI (or other MCP clients) acts as an interface to invoke tools, but [does not retain prompts or responses for training](https://resources.github.com/learn/pathways/copilot/essentials/how-github-copilot-handles-data/) when using MCP tools. To read your entries, open them directly in Obsidian or your text editor.
 
 ## What You Need
 
