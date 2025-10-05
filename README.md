@@ -11,7 +11,7 @@ Journaling unlocks mental clarity and space for growth. This system combines Obs
 - GitHub Copilot CLI or any AI cli
 - Dedicated Obsidian vault for entries
 
-## Quick Startf
+## Quick Start
 
 **1. Clone the repo:**
 ```bash
@@ -76,69 +76,16 @@ cp .env.example .env
 
 ## Daily Workflow
 
-**Optional: Auto-approve diary tools Copilot example** 
+**Optional:** Auto-approve tools by adding `{"allowedTools": ["diary"]}` to `~/.config/copilot/config.json`
 
-Add to `~/.config/copilot/config.json` (or `$XDG_CONFIG_HOME/copilot/config.json`):
-```json
-{
-  "allowedTools": ["diary"]
-}
-```
+1. **Create:** `"create a memory log for today"` → Generates file with AI prompts
+2. **Write:** Open in Obsidian, reflect on prompts, free-write in Brain Dump section
+3. **Link:** `"link today's memory log"` → Auto-generates `[[YYYY-MM-DD]]` connections and `#tags`
+4. **Explore:** Use Obsidian's backlinks panel and graph view
 
-Or pass it each time you start:
-```bash
-copilot --allow-tool "diary"
-```
+**Insights:** `"show me themes from the last week"`
 
-**1. Start your session:**
-```bash
-copilot
-```
-
-**2. Create today's memory log:**
-```
-"create a memory log for today"
-```
-→ Generates a file with AI-powered reflection prompts based on your recent entries
-
-**3. Open in Obsidian and write:** (or in terminal, it is just a .md file)
-- Reflect on the prompts
-- Free-write in the Brain Dump section
-
-**4. Link when done:**
-```
-"link today's memory log"
-```
-→ Auto-generates temporal connections `[[YYYY-MM-DD]]` and topic tags `#theme`
-
-**5. Explore connections:**
-- Use Obsidian's backlinks panel to see related entries
-- View graph to visualize your thinking patterns over time
-
-**Privacy-safe insights:**
-- `"show me themes from the last week"` - See recurring topics without exposing content
-- `"what themes have I been thinking about lately"` - Get theme analysis
-
-**6. Generate a Memory Trace (periodic review):**
-```
-"create a memory trace for the last 30 days"
-"generate a memory trace for the last 3 months"
-"create a memory trace analyzing the last year"
-```
-→ Creates a comprehensive analysis document with:
-  - Timeline visualization of your journey
-  - Core theme evolution across time periods
-  - Pattern recognition and recurring cycles
-  - Relationship maps and growth trajectories
-  - Wisdom extracted from your entries
-  - Significant moments timeline
-
-The trace is saved as `memory-trace-YYYY-MM-DD.md` in your diary vault for easy reference in Obsidian.
-
-**To read your entries:**
-- Open them directly in Obsidian (recommended for backlinks/graph)
-- Or view in any text editor—they're just markdown files in `DIARY_PATH`
-- Avoid using CLI read commands to keep content private
+**Memory Trace:** `"create a memory trace for the last 30 days"` → Comprehensive analysis with timeline, theme evolution, patterns, and wisdom (saved as `memory-trace-YYYY-MM-DD.md`)
 
 ## If It Breaks
 
@@ -152,80 +99,21 @@ The trace is saved as `memory-trace-YYYY-MM-DD.md` in your diary vault for easy 
 
 ## How It Works
 
-- **Local AI**: Ollama processes your entries locally—your journal content never leaves your machine
-- **AI CLI Interface**: Your CLI (Copilot, Claude Desktop, etc.) provides the interface via MCP protocol
-- **Smart Prompts**: Analyzes the Brain Dump section (your actual reflections, not the prompts) to generate contextual questions based on what you wrote
-- **Auto-linking**: Creates temporal `[[YYYY-MM-DD]]` and topic `#tag` connections  
-- **Caching**: Stores theme analysis in-memory to avoid redundant AI calls
-- **Sunday Special**: 5 prompts synthesizing the past 7 calendar days (vs. 3 prompts from recent entries normally)
+- **Local AI**: Ollama processes entries locally—content never leaves your machine
+- **Brain Dump Focus**: Analyzes your actual writing (not the prompts) for themes and connections
+- **Smart Prompts**: Identifies areas needing deeper reflection across different life themes
+- **Auto-linking**: Connects entries with similar Brain Dump content via `[[YYYY-MM-DD]]` and `#tags`
+- **Sundays**: 5 prompts synthesizing entries from the past 7 calendar days (vs 3 from recent entries normally)
 
 
-## Memory Log Format
+## Entry Format
 
-Files are stored as `YYYY-MM-DD.md` in your diary vault:
+Each entry (`YYYY-MM-DD.md`) contains:
 
-**Regular Day (3 prompts):**
-```markdown
-## 🧠 Reflection Prompts
-
-*Building on insights from previous entries*
-
-**1. What cognitive patterns or mental models shaped your thinking this period?**
-
-**2. How do your current challenges reflect deeper philosophical questions about identity and meaning?**
-
-**3. What assumptions about reality, success, or relationships are being tested right now?**
-
----
-
-## 💭 Brain Dump
-
-*Your thoughts, experiences, and observations...*
-
-
----
-
-## 🔗 Memory Links
-
-*Temporal connections and topic tags will be auto-generated when you complete the entry.*
-```
-
-**Sunday (5 prompts + weekly synthesis):**
-```markdown
-## 🌅 Weekly Synthesis & Alignment
-
-*A deeper reflection on the past week and intentional focus for the week ahead*
-
-**1. What patterns from this past week reveal deeper truths about your cognitive frameworks?**
-
-**2. How did your decision-making processes evolve throughout the week?**
-
-**3. What assumptions about progress and growth were challenged this week?**
-
-**4. Where do you need to realign your mental models for the upcoming week?**
-
-**5. What philosophical questions emerged from this week's experiences that deserve deeper exploration?**
-
----
-
-## 💭 Brain Dump
-
-*Your thoughts, experiences, and observations...*
-
-
----
-
-## 🔗 Memory Links
-
-*Temporal connections and topic tags will be auto-generated when you complete the entry.*
-```
-
-**After completion, memory links are added:**
-```markdown
-## 🔗 Memory Links
-
-**Temporal:** [[2024-09-28]] • [[2024-09-30]] • [[2024-10-01]]
-**Topics:** #work-stress #personal-growth #decision-making #cognitive-patterns
-```
+1. **Reflection Prompts** (3 for weekdays, 5 for Sundays) - AI-generated questions based on your recent Brain Dump content
+2. **Brain Dump** - Your freeform writing, reflections, and experiences
+3. **Memory Links** - Auto-generated after completion:
+   - Temporal connections: `[[2024-09-28]]` `[[2024-09-30]]`
+   - Topic tags: `#work-life-balance` `#personal-growth`
 
 **License**: MIT • **Requirements**: Python 3.13+, FastMCP 2.12.4+, Ollama
