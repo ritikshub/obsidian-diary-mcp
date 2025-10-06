@@ -4,6 +4,7 @@ from typing import Annotated
 from fastmcp import FastMCP
 from pydantic import Field
 
+from .config import PLANNER_PATH
 from .ollama_client import initialize_ollama
 from .entry_manager import entry_manager
 from .analysis import analysis_engine
@@ -383,6 +384,71 @@ async def create_memory_trace(
             return f"✨ Memory Trace generated but couldn't save to file.\n\n{trace_content}"
     else:
         return trace_content
+
+
+@mcp.tool(
+    annotations={
+        "title": "Extract Todos from Entry",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": False
+    }
+)
+async def extract_todos(
+    date: Annotated[str, "Date of the entry in YYYY-MM-DD format (e.g., '2024-10-05' for today)"]
+) -> str:
+    """Extract action items and todos from a diary entry and save them to a planner file.
+    
+    Analyzes the diary entry for the specified date, extracts all action items,
+    and creates a markdown file in Documents/planner/ with the todos organized
+    for easy review and planning.
+    """
+    try:
+        entry_date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return "Error: Date must be in YYYY-MM-DD format"
+    
+    filename = entry_date.strftime("%Y-%m-%d")
+    file_path = entry_manager.get_entry_path(entry_date)
+    
+    if not entry_manager.entry_exists(entry_date):
+        return f"No memory log found for {filename}. Create one first."
+    
+    print(f"📝 Extracting todos from {filename}...")
+    
+    content = entry_manager.read_entry(file_path)
+    if content.startswith("Error reading file"):
+        return f"Error reading entry: {content}"
+    
+    todos = await analysis_engine.extract_todos(content)
+    
+    if not todos:
+        return f"No action items found in entry for {filename}. Your entry may not contain any explicit tasks or todos."
+    
+    # Create planner directory
+    PLANNER_PATH.mkdir(parents=True, exist_ok=True)
+    
+    # Generate planner file
+    planner_filename = f"todos-{filename}.md"
+    planner_path = PLANNER_PATH / planner_filename
+    
+    # Format the content
+    planner_content = f"# Action Items - {entry_date.strftime('%B %d, %Y')}\n\n"
+    planner_content += f"Extracted from diary entry: [[{filename}]]\n\n"
+    planner_content += "## 📋 Tasks\n\n"
+    
+    for todo in todos:
+        planner_content += f"- [ ] {todo}\n"
+    
+    planner_content += f"\n---\n\n*Extracted on {datetime.now().strftime('%Y-%m-%d at %H:%M')}*\n"
+    
+    # Write the planner file
+    try:
+        planner_path.write_text(planner_content, encoding="utf-8")
+        return f"✅ **Extracted {len(todos)} action items!**\n\n📁 Saved to: {planner_path}\n\n💡 **Next steps:**\n- Review and prioritize your tasks\n- Add deadlines or context as needed\n- Check off items as you complete them\n\n📝 **Preview:**\n{chr(10).join([f'- {todo}' for todo in todos[:5]])}{'...' if len(todos) > 5 else ''}"
+    except Exception as e:
+        return f"Error writing planner file: {e}\n\n📝 **Extracted todos:**\n{chr(10).join([f'- {todo}' for todo in todos])}"
 
 
 if __name__ == "__main__":

@@ -66,6 +66,7 @@ cp .env.example .env
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `DIARY_PATH` | `~/Documents/diary` | Path to your diary vault |
+| `PLANNER_PATH` | `~/Documents/planner` | Path to save extracted todo lists |
 | `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze for regular days (Sundays use past 7 calendar days) |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
 | `OLLAMA_MODEL` | `llama3.1:latest` | LLM model to use |
@@ -87,11 +88,38 @@ cp .env.example .env
 
 **Memory Trace:** `"create a memory trace for the last 30 days"` → Comprehensive analysis with timeline, theme evolution, patterns, and wisdom (saved as `memory-trace-YYYY-MM-DD.md`)
 
+## Logging & Debugging
+
+Two types of logs are created in the `logs/` directory:
+
+- **`server-YYYY-MM-DD.log`** - Server startup and JSON-RPC protocol messages
+- **`debug-YYYY-MM-DD.log`** - Detailed operation logs with timestamps
+
+**View debug logs:**
+```bash
+# Watch in real-time
+tail -f logs/debug-$(date +%Y-%m-%d).log
+
+# View specific sections
+grep "Template Generation" logs/debug-*.log
+grep "Ollama API" logs/debug-*.log
+grep ERROR logs/debug-*.log
+```
+
+**Log format:**
+```
+HH:MM:SS | module | LEVEL | message
+08:11:35 | template | INFO | Entry date: Monday, October 06, 2025
+08:11:35 | ollama | DEBUG | Endpoint: http://localhost:11434/api/generate
+08:11:42 | analysis | INFO | ✓ Extracted 3 prompts
+```
+
 ## If It Breaks
 
 - Check config: `cat ~/.copilot/mcp-config.json` or wherever your cli logs go
 - Make script runnable: `chmod +x start-server.sh`
 - Test it: `./start-server.sh`
+- Check debug logs: `tail -f logs/debug-$(date +%Y-%m-%d).log`
 - Check server logs: `tail -f logs/server-$(date +%Y-%m-%d).log`
 - View all logs: `ls -lh logs/`
 - Restart your CLI
@@ -101,7 +129,8 @@ cp .env.example .env
 
 - **Local AI**: Ollama processes entries locally—content never leaves your machine
 - **Brain Dump Focus**: Analyzes your actual writing (not the prompts) for themes and connections
-- **Smart Prompts**: Identifies areas needing deeper reflection across different life themes
+- **Smart Prompts**: AI generates direct, personal questions focused on your most recent entry while using older entries for context
+- **Recency Weighting**: Recent thoughts get priority, but patterns from earlier entries provide depth
 - **Auto-linking**: Connects entries with similar Brain Dump content via `[[YYYY-MM-DD]]` and `#tags`
 - **Sundays**: 5 prompts synthesizing entries from the past 7 calendar days (vs 3 from recent entries normally)
 

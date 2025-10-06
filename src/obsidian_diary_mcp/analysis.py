@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from .ollama_client import ollama_client
 from .entry_manager import entry_manager
+from .logger import analysis_logger as logger, log_section
 
 
 class AnalysisEngine:
@@ -42,7 +43,7 @@ class AnalysisEngine:
         # If we have substantial brain dump content, prioritize it
         if len(brain_dump) > 50:
             analysis_content = brain_dump
-            print(f"🎯 Analyzing Brain Dump section ({len(brain_dump)} chars) for themes...")
+            logger.debug(f"Analyzing Brain Dump section ({len(brain_dump)} chars)")
         else:
             # Fallback to full content but remove links section
             analysis_content = re.sub(
@@ -51,7 +52,7 @@ class AnalysisEngine:
             analysis_content = re.sub(
                 r"##\s*🔗\s*Memory Links.*$", "", analysis_content, flags=re.DOTALL
             )
-            print(f"⚠️ No substantial Brain Dump found, analyzing full entry...")
+            logger.debug("No substantial Brain Dump found, analyzing full entry")
 
         if len(analysis_content.strip()) < 20:
             return []
@@ -64,14 +65,14 @@ Return ONLY the themes as a simple comma-separated list with no other text:
 friendship, work-stress, creativity"""
 
         try:
-            print("🤖 Attempting theme extraction with Ollama...")
+            logger.debug("Extracting themes with Ollama...")
             response_text = await ollama_client.generate(
                 prompt, 
                 "You are an expert at identifying key themes in personal writing. Extract the most meaningful concepts."
             )
-            print("✅ Ollama theme extraction successful!")
+            logger.debug("Theme extraction successful")
         except Exception as e:
-            print(f"❌ Ollama theme extraction failed: {e}")
+            logger.error(f"Theme extraction failed: {e}")
             return []
         
         themes = [
@@ -132,8 +133,8 @@ friendship, work-stress, creativity"""
         entries = entry_manager.get_all_entries()
         similarity_scores = []
 
-        print(f"🔗 Finding related entries based on Brain Dump themes: {', '.join(list(current_themes)[:3])}...")
-        print(f"🔍 Analyzing {len(entries)} entries for connections...")
+        logger.info(f"Finding related entries based on themes: {', '.join(list(current_themes)[:3])}")
+        logger.debug(f"Analyzing {len(entries)} entries for connections")
         
         for date, file_path in entries:
             if exclude_date and file_path.stem == exclude_date:
@@ -158,7 +159,7 @@ friendship, work-stress, creativity"""
         backlinks = [f"[[{stem}]]" for _, stem in similarity_scores[:max_related]]
         
         if backlinks:
-            print(f"✅ Found {len(backlinks)} cognitive connections")
+            logger.info(f"✓ Found {len(backlinks)} cognitive connections")
         
         return backlinks
     
@@ -170,7 +171,11 @@ friendship, work-stress, creativity"""
         is_sunday: bool = False
     ) -> List[str]:
         """Generate reflection prompts based on recent content."""
+        log_section(logger, "Generate Reflection Prompts")
+        logger.info(f"Input: {len(recent_content):,} chars | Count: {count} | Sunday: {is_sunday} | Focus: {focus or 'None'}")
+        
         if len(recent_content.strip()) < 20:
+            logger.warning("Content too short (<20 chars), returning empty")
             return []
 
         focus_instruction = ""
@@ -182,45 +187,128 @@ friendship, work-stress, creativity"""
             weekly_instruction = "\n\nThis is a Sunday reflection - synthesize the past week and set intentions for the week ahead."
 
         # Use full content - don't truncate (the AI can handle it and needs full context)
-        prompt = f"""Read through this recent journal content and generate {count} thoughtful reflection questions.{focus_instruction}{weekly_instruction}
+        prompt = f"""Read through these journal entries and generate {count} thoughtful reflection questions. Pay special attention to the MOST RECENT entry.{focus_instruction}{weekly_instruction}
 
-Recent content:
+Journal entries (most recent first):
 {recent_content}
 
 Your task:
-- Read carefully and notice what topics appear
+- Focus primarily on themes and concerns from the MOST RECENT ENTRY
+- Use earlier entries for context, but prioritize what's freshest on their mind
 - Identify areas that seem unresolved, in transition, or worth exploring deeper
-- Generate {count} questions about DIFFERENT topics - spread them across the variety of themes present
-- Write questions that are personal, direct, and conversational (use "you" and "your")
-- Ask about specific situations and feelings, not abstract concepts
+- Generate {count} questions about DIFFERENT topics - spread them across the variety of themes
+- Write questions that are DIRECT, CONVERSATIONAL, and PERSONAL
+  ✓ Good: "What's making you feel stuck with the Python role right now?"
+  ✗ Bad: "The person is considering a role focused on GitHub Copilot..."
+- Use "you" and "your" - speak directly to them
+- Ask about specific situations and feelings, not summaries
 - Each question should address a different area of their life
 
-Format as numbered questions ONLY:
+Format as numbered questions ONLY (no commentary, no summaries, just questions):
 {chr(10).join([f"{i}. [question]" for i in range(1, count + 1)])}"""
 
+        logger.debug(f"Prompt size: {len(prompt):,} chars | Preview: {prompt[:100]}...")
+        
         try:
-            print("🤖 Generating thoughtful prompts with Ollama...")
+            logger.info("Calling Ollama API for prompt generation...")
             response_text = await ollama_client.generate(
                 prompt, 
-                "You are a perceptive journaling coach. Read the person's recent entries and identify what areas of their life seem to need more reflection or exploration. Generate questions about DIFFERENT topics - ensure variety across the themes you notice. Be thoughtful about what seems important or unresolved. Use simple, personal language."
+                "You are a perceptive journaling coach who asks direct, personal questions. Generate questions in second person (you/your), not third person summaries. Focus on the most recent entry while using older entries for context. Be conversational and specific - like a thoughtful friend asking about what's currently on their mind. CRITICAL: Output ONLY numbered questions, no other text."
             )
-            print("✅ Ollama generation successful!")
+            logger.info(f"Received response: {len(response_text)} chars")
+            logger.debug(f"Full response: {response_text}")
         except Exception as e:
-            print(f"❌ Ollama generation failed: {e}")
-            print("💡 Tip: Install Ollama and run: ollama pull llama3.1")
+            logger.error(f"Ollama call failed ({type(e).__name__}): {e}")
+            logger.info("Tip: Install Ollama and run: ollama pull llama3.1")
             return []
 
+        logger.debug("Parsing prompts from response...")
         prompts = []
         for line in response_text.split("\n"):
             line = line.strip()
+            # Skip commentary/headers
+            if any(skip in line.lower() for skip in ['unresolved', 'worth exploring', 'here are', '**', 'topics:', 'questions:']):
+                continue
+            
             if line and (
                 line.startswith(("1.", "2.", "3.", "4.", "5.")) or line.startswith("-")
             ):
                 clean_prompt = re.sub(r"^[\d\-\.\s]+", "", line).strip()
-                if clean_prompt:
+                # Only accept if it's a question or a clear statement
+                if clean_prompt and (clean_prompt.endswith("?") or len(clean_prompt) > 20):
+                    logger.debug(f"  ✓ {clean_prompt[:60]}...")
                     prompts.append(clean_prompt)
 
+        logger.info(f"✓ Extracted {len(prompts)} prompts (returning first {count})")
         return prompts[:count]
+    
+    async def extract_todos(self, content: str) -> List[str]:
+        """Extract action items and todos from diary entry content."""
+        log_section(logger, "Extract Todos")
+        logger.info(f"Analyzing content: {len(content):,} chars")
+        
+        if len(content.strip()) < 20:
+            logger.warning("Content too short (<20 chars), returning empty")
+            return []
+        
+        # Extract brain dump section for better context
+        brain_dump = self._extract_brain_dump(content)
+        analysis_content = brain_dump if len(brain_dump) > 50 else content
+        
+        prompt = f"""Analyze this journal entry and extract ALL action items, tasks, and todos mentioned.
+
+Journal entry:
+{analysis_content}
+
+Your task:
+- Identify any tasks, action items, or things the person needs/wants to do
+- Include both explicit todos ("I need to...", "I should...") and implicit ones (unfinished work, intentions, goals)
+- Be specific and actionable
+- Extract the person's own words where possible
+- If there are no clear action items, return "No action items found"
+
+Format as a simple bulleted list with one action per line:
+- [Action item 1]
+- [Action item 2]
+- [Action item 3]
+
+IMPORTANT: Only output the bulleted list, no other text or commentary."""
+        
+        logger.debug(f"Prompt size: {len(prompt):,} chars")
+        
+        try:
+            logger.info("Calling Ollama API for todo extraction...")
+            response_text = await ollama_client.generate(
+                prompt,
+                "You are a helpful assistant that extracts action items from journal entries. Be thorough but focused on actionable tasks. Output ONLY a bulleted list of action items, nothing else."
+            )
+            logger.info(f"Received response: {len(response_text)} chars")
+            logger.debug(f"Full response: {response_text}")
+        except Exception as e:
+            logger.error(f"Ollama call failed ({type(e).__name__}): {e}")
+            return []
+        
+        # Check for "no action items" response
+        if "no action items" in response_text.lower():
+            logger.info("No action items found in entry")
+            return []
+        
+        logger.debug("Parsing todos from response...")
+        todos = []
+        for line in response_text.split("\n"):
+            line = line.strip()
+            # Skip headers or meta-commentary
+            if any(skip in line.lower() for skip in ['action items:', 'tasks:', 'todos:', 'here are']):
+                continue
+            
+            if line and (line.startswith("-") or line.startswith("*") or line.startswith("•")):
+                clean_todo = re.sub(r"^[\-\*•\s]+", "", line).strip()
+                if clean_todo and len(clean_todo) > 3:
+                    logger.debug(f"  ✓ {clean_todo[:60]}...")
+                    todos.append(clean_todo)
+        
+        logger.info(f"✓ Extracted {len(todos)} action items")
+        return todos
 
 
 analysis_engine = AnalysisEngine()

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DIARY_PATH = Path(os.getenv("DIARY_PATH", str(Path.home() / "Documents" / "diary")))
+PLANNER_PATH = Path(os.getenv("PLANNER_PATH", str(Path.home() / "Documents" / "planner")))
 RECENT_ENTRIES_COUNT = int(os.getenv("RECENT_ENTRIES_COUNT", "3"))
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
