@@ -4,13 +4,18 @@ from typing import Annotated
 from fastmcp import FastMCP
 from pydantic import Field
 
-from .config import PLANNER_PATH
+from .config import PLANNER_PATH, DIARY_PATH
 from .ollama_client import initialize_ollama
 from .entry_manager import entry_manager
 from .analysis import analysis_engine
 from .template_generator import template_generator
+from .logger import server_logger
 
 mcp = FastMCP("obsidian-diary")
+
+# Log configuration on startup
+server_logger.info(f"📁 Diary Path: {DIARY_PATH}")
+server_logger.info(f"📋 Planner Path: {PLANNER_PATH}")
 
 initialize_ollama()
 
