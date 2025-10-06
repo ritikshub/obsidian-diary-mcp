@@ -128,31 +128,43 @@ friendship, work-stress, creativity"""
         current_themes = set(await self.get_themes_cached(current_content, exclude_date or "current"))
 
         if not current_themes:
+            logger.info("No themes extracted for current entry")
             return []
 
         entries = entry_manager.get_all_entries()
         similarity_scores = []
 
-        logger.info(f"Finding related entries based on themes: {', '.join(list(current_themes)[:3])}")
+        logger.info(f"Finding related entries based on themes: {', '.join(sorted(list(current_themes)))}")
         logger.debug(f"Analyzing {len(entries)} entries for connections")
         
         for date, file_path in entries:
             if exclude_date and file_path.stem == exclude_date:
+                logger.debug(f"  Skipping {file_path.stem} (excluded date)")
                 continue
 
             entry_content = entry_manager.read_entry(file_path)
             if entry_content.startswith("Error reading file"):
+                logger.debug(f"  Skipping {file_path.stem} (read error)")
                 continue
                 
+            logger.debug(f"  Getting themes for {file_path.stem}...")
             entry_themes = set(await self.get_themes_cached(entry_content, file_path.stem))
+            logger.debug(f"  Themes for {file_path.stem}: {sorted(list(entry_themes)) if entry_themes else 'EMPTY'}")
 
             if entry_themes:
-                similarity = len(current_themes & entry_themes) / len(
-                    current_themes | entry_themes
-                )
+                intersection = current_themes & entry_themes
+                union = current_themes | entry_themes
+                similarity = len(intersection) / len(union)
+                
+                logger.debug(f"  {file_path.stem}: themes={sorted(list(entry_themes))}, intersection={sorted(list(intersection))}, union={sorted(list(union))}, similarity={similarity:.3f}")
                 
                 if similarity > 0.08:
                     similarity_scores.append((similarity, file_path.stem))
+                    logger.debug("    ✓ Above threshold (0.08), added to results")
+                else:
+                    logger.debug("    ✗ Below threshold (0.08), skipped")
+            else:
+                logger.debug(f"  {file_path.stem}: No themes extracted")
 
         similarity_scores.sort(reverse=True, key=lambda x: x[0])
         
@@ -160,6 +172,8 @@ friendship, work-stress, creativity"""
         
         if backlinks:
             logger.info(f"✓ Found {len(backlinks)} cognitive connections")
+        else:
+            logger.info("No connections found - similarity threshold not met or insufficient entries")
         
         return backlinks
     
@@ -193,16 +207,20 @@ Journal entries (most recent first):
 {recent_content}
 
 Your task:
-- Focus primarily on themes and concerns from the MOST RECENT ENTRY
-- Use earlier entries for context, but prioritize what's freshest on their mind
-- Identify areas that seem unresolved, in transition, or worth exploring deeper
-- Generate {count} questions about DIFFERENT topics - spread them across the variety of themes
-- Write questions that are DIRECT, CONVERSATIONAL, and PERSONAL
-  ✓ Good: "What's making you feel stuck with the Python role right now?"
-  ✗ Bad: "The person is considering a role focused on GitHub Copilot..."
+- Focus ONLY on what they actually wrote - do NOT make assumptions or infer feelings they didn't express
+- Reference specific things they mentioned, not imagined concerns
+- Identify concrete topics they discussed: ideas, observations, plans, questions
+- Generate {count} questions about DIFFERENT topics from their writing
+- Write questions that EXPAND on what they said, not assume problems
+  ✓ Good: "What other patterns do you think might emerge from your journaling over time?"
+  ✓ Good: "How do you plan to remember to test those three items you listed?"
+  ✗ Bad: "What's making you feel unsure about privacy?" (if they never said they felt unsure)
+  ✗ Bad: "What are you dreading about Sunday reflections?" (if they said "intimidating" not "dreading")
 - Use "you" and "your" - speak directly to them
-- Ask about specific situations and feelings, not summaries
-- Each question should address a different area of their life
+- Base questions on their actual words and topics
+- Each question should explore a different topic they mentioned
+
+CRITICAL: Only ask about things they actually wrote about. Do not invent concerns or feelings.
 
 Format as numbered questions ONLY (no commentary, no summaries, just questions):
 {chr(10).join([f"{i}. [question]" for i in range(1, count + 1)])}"""
@@ -213,7 +231,7 @@ Format as numbered questions ONLY (no commentary, no summaries, just questions):
             logger.info("Calling Ollama API for prompt generation...")
             response_text = await ollama_client.generate(
                 prompt, 
-                "You are a perceptive journaling coach who asks direct, personal questions. Generate questions in second person (you/your), not third person summaries. Focus on the most recent entry while using older entries for context. Be conversational and specific - like a thoughtful friend asking about what's currently on their mind. CRITICAL: Output ONLY numbered questions, no other text."
+                "You are a thoughtful journaling coach who helps people explore their ideas deeper. Generate questions based ONLY on what the person actually wrote - never assume feelings, concerns, or problems they didn't mention. Ask questions that expand on their topics, curiosities, and observations. Be conversational and encouraging. CRITICAL: Output ONLY numbered questions, no other text."
             )
             logger.info(f"Received response: {len(response_text)} chars")
             logger.debug(f"Full response: {response_text}")
@@ -223,11 +241,16 @@ Format as numbered questions ONLY (no commentary, no summaries, just questions):
             return []
 
         logger.debug("Parsing prompts from response...")
+        
+        # Remove chain-of-thought tags if present (e.g., <think>, </think>)
+        response_text = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL)
+        response_text = re.sub(r'</?think>', '', response_text)
+        
         prompts = []
         for line in response_text.split("\n"):
             line = line.strip()
-            # Skip commentary/headers
-            if any(skip in line.lower() for skip in ['unresolved', 'worth exploring', 'here are', '**', 'topics:', 'questions:']):
+            # Skip commentary/headers and chain-of-thought markers
+            if any(skip in line.lower() for skip in ['unresolved', 'worth exploring', 'here are', '**', 'topics:', 'questions:', '<think>', '</think>']):
                 continue
             
             if line and (

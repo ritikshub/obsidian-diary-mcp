@@ -26,10 +26,8 @@ DIARY_PATH = Path(diary_path_env)
 PLANNER_PATH = Path(planner_path_env)
 RECENT_ENTRIES_COUNT = int(os.getenv("RECENT_ENTRIES_COUNT", "3"))
 
-print(f"[CONFIG] Final DIARY_PATH: {DIARY_PATH}", file=sys.stderr)
-
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
-OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "30"))
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "60"))  # Longer for reasoning models
 OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.7"))
-OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "200"))
+OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "1000"))  # Max tokens (Ollama's API name)
