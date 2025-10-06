@@ -101,14 +101,6 @@ class TemplateGenerator:
         template_parts.append("## 🧠 Brain Dump")
         template_parts.append("")
         template_parts.append("*Your thoughts, experiences, and observations...*")
-        template_parts.append("")
-        template_parts.append("")
-        template_parts.append("")
-        template_parts.append("---")
-        template_parts.append("")
-        template_parts.append("## 🧠 Memory Links")
-        template_parts.append("")
-        template_parts.append("*Temporal connections and topic tags will be auto-generated when you complete the entry.*")
 
         return "\n".join(template_parts)
 
