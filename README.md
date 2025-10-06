@@ -77,12 +77,11 @@ cp .env.example .env
 
 ## Daily Workflow
 
-**Optional:** Auto-approve tools by adding `{"allowedTools": ["diary"]}` to `~/.config/copilot/config.json`
-
 1. **Create:** `"create a memory log for today"` → Generates file with AI prompts
 2. **Write:** Open in Obsidian, reflect on prompts, free-write in Brain Dump section
-3. **Link:** `"link today's memory log"` → Auto-generates `[[YYYY-MM-DD]]` connections and `#tags`
-4. **Explore:** Use Obsidian's backlinks panel and graph view
+3. **Extract:** `"extract todos from today's entry"` → AI extracts action items and creates checklist (saved as `todos-YYYY-MM-DD.md`)
+4. **Link:** `"link today's memory log"` → Auto-generates `[[YYYY-MM-DD]]` connections and `#tags`
+5. **Explore:** Use Obsidian's backlinks panel and graph view
 
 **Insights:** `"show me themes from the last week"`
 
