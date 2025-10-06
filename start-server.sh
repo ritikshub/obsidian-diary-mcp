@@ -10,14 +10,7 @@ echo "Logs: $LOG_FILE"
 echo "DIARY_PATH: ${DIARY_PATH:-default (~/Documents/diary)}"
 echo "PLANNER_PATH: ${PLANNER_PATH:-default (~/Documents/planner)}"
 
-# Export environment variables so they're available to Python
-export DIARY_PATH
-export PLANNER_PATH
-export RECENT_ENTRIES_COUNT
-export OLLAMA_URL
-export OLLAMA_MODEL
-export OLLAMA_TIMEOUT
-export OLLAMA_TEMPERATURE
-export OLLAMA_NUM_PREDICT
+# Explicitly print all environment variables being passed
+env | grep -E "DIARY_PATH|PLANNER_PATH|OLLAMA" >> "$LOG_FILE"
 
 exec uv run obsidian-diary-mcp 2>&1 | tee -a "$LOG_FILE"

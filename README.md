@@ -43,36 +43,40 @@ npm install -g @github/copilot
 copilot
 ```
 
-**7. Add MCP server to your AI CLI:**
+**7. Configure your paths (required):**
 
-I use GitHub Copilot CLI, but any MCP-capable CLI works.
-
-**Required:**
-- Name: `diary`
-- Command: `/full/path/to/obsidian-diary-mcp/start-server.sh`
-- Environment: `DIARY_PATH=/path/to/your/diary-vault`
-
-**Optional - Customize via `.env`:**
-
-All settings have sensible defaults. Only create `.env` if you want to customize:
+Create a `.env` file from the example:
 
 ```bash
 cp .env.example .env
-# Edit to override defaults
 ```
 
-**Available settings (all optional):**
+Edit `.env` and set your paths:
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `DIARY_PATH` | `~/Documents/diary` | Path to your diary vault |
-| `PLANNER_PATH` | `~/Documents/planner` | Path to save extracted todo lists |
-| `RECENT_ENTRIES_COUNT` | `3` | Number of recent entries to analyze for regular days (Sundays use past 7 calendar days) |
-| `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_MODEL` | `llama3.1:latest` | LLM model to use |
-| `OLLAMA_TIMEOUT` | `30` | Request timeout in seconds |
-| `OLLAMA_TEMPERATURE` | `0.7` | Creativity level (0.0-1.0) |
-| `OLLAMA_NUM_PREDICT` | `200` | Max tokens to generate |
+```bash
+DIARY_PATH=/path/to/your/diary-vault
+PLANNER_PATH=/path/to/your/planner
+```
+
+**8. Add MCP server to your AI CLI:**
+
+I use GitHub Copilot CLI, but any MCP-capable CLI works.
+
+- Name: `diary`
+- Command: `/full/path/to/obsidian-diary-mcp/start-server.sh`
+
+**Configuration options in `.env`:**
+
+| Setting | Default | Required | Description |
+|---------|---------|----------|-------------|
+| `DIARY_PATH` | None | **Yes** | Path to your diary vault |
+| `PLANNER_PATH` | None | **Yes** | Path to save extracted todo lists |
+| `RECENT_ENTRIES_COUNT` | `3` | No | Number of recent entries to analyze |
+| `OLLAMA_URL` | `http://localhost:11434` | No | Ollama API endpoint |
+| `OLLAMA_MODEL` | `llama3.1:latest` | No | LLM model to use |
+| `OLLAMA_TIMEOUT` | `30` | No | Request timeout in seconds |
+| `OLLAMA_TEMPERATURE` | `0.7` | No | Creativity level (0.0-1.0) |
+| `OLLAMA_NUM_PREDICT` | `200` | No | Max tokens to generate |
 
 
 ## Daily Workflow

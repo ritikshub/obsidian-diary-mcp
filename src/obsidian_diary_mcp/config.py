@@ -1,18 +1,32 @@
 """Configuration settings for the Obsidian Diary MCP server."""
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Load paths with debug info
+# Load paths - no defaults, must be configured
 diary_path_env = os.getenv("DIARY_PATH")
 planner_path_env = os.getenv("PLANNER_PATH")
 
-DIARY_PATH = Path(diary_path_env) if diary_path_env else Path.home() / "Documents" / "diary"
-PLANNER_PATH = Path(planner_path_env) if planner_path_env else Path.home() / "Documents" / "planner"
+if not diary_path_env:
+    print("[CONFIG ERROR] DIARY_PATH must be set in .env file", file=sys.stderr)
+    sys.exit(1)
+
+if not planner_path_env:
+    print("[CONFIG ERROR] PLANNER_PATH must be set in .env file", file=sys.stderr)
+    sys.exit(1)
+
+print(f"[CONFIG] DIARY_PATH: {diary_path_env}", file=sys.stderr)
+print(f"[CONFIG] PLANNER_PATH: {planner_path_env}", file=sys.stderr)
+
+DIARY_PATH = Path(diary_path_env)
+PLANNER_PATH = Path(planner_path_env)
 RECENT_ENTRIES_COUNT = int(os.getenv("RECENT_ENTRIES_COUNT", "3"))
+
+print(f"[CONFIG] Final DIARY_PATH: {DIARY_PATH}", file=sys.stderr)
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
