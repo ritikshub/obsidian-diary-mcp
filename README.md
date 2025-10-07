@@ -47,10 +47,11 @@ copilot
 
 I use GitHub Copilot CLI, but any MCP-capable CLI works.
 
+
 **Required:**
 - Name: `diary`
 - Command: `/full/path/to/obsidian-diary-mcp/start-server.sh`
-- Environment: `DIARY_PATH=/path/to/your/diary-vault`
+- Environment: '$env:DIARY_PATH = "C:\Users\Ritik Roushan\Documents\Obsidian Vault"'
 
 **Optional - Customize via `.env`:**
 

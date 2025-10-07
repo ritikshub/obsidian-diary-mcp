@@ -47,7 +47,7 @@ ollama_client = OllamaClient()
 def initialize_ollama():
     """Initialize and test Ollama connection."""
     if ollama_client.test_connection():
-        print(f"✅ Ollama available at {OLLAMA_URL} with model {OLLAMA_MODEL}")
+        print(f" Ollama available at {OLLAMA_URL} with model {OLLAMA_MODEL}")
     else:
         print(f"Warning: Ollama not available at {OLLAMA_URL}")
-        print("💡 Install Ollama and run: ollama pull llama3.1")
+        print("Tip: Install Ollama and run: ollama pull llama3.1")
