@@ -6,6 +6,7 @@ from typing import Optional, List
 from .config import RECENT_ENTRIES_COUNT
 from .entry_manager import entry_manager
 from .analysis import analysis_engine
+from .logger import template_logger as logger, log_section
 
 
 class TemplateGenerator:
@@ -18,6 +19,9 @@ class TemplateGenerator:
         focus: Optional[str] = None
     ) -> str:
         """Generate template content for a diary entry."""
+        log_section(logger, f"Template Generation: {filename}")
+        logger.info(f"Entry date: {entry_date.strftime('%A, %B %d, %Y')}")
+        
         is_sunday = entry_date.weekday() == 6
         
         if is_sunday:
@@ -26,21 +30,36 @@ class TemplateGenerator:
             week_start = entry_date - timedelta(days=7)
             all_entries = entry_manager.get_all_entries()
             recent_entries = [(date, path) for date, path in all_entries if week_start <= date < entry_date]
-            print(f"📅 Sunday reflection: Found {len(recent_entries)} entries from past week ({week_start.strftime('%Y-%m-%d')} to {(entry_date - timedelta(days=1)).strftime('%Y-%m-%d')})")
+            logger.info(f"Sunday reflection: Analyzing {len(recent_entries)} entries from {week_start.strftime('%Y-%m-%d')} to {(entry_date - timedelta(days=1)).strftime('%Y-%m-%d')}")
         else:
             # For regular days: get last N entries
             recent_entries = entry_manager.get_all_entries()[:RECENT_ENTRIES_COUNT]
+            logger.info(f"Regular day: Using last {len(recent_entries)} entries for context")
         
-        recent_contents = [entry_manager.read_entry(path) for _, path in recent_entries]
-        recent_text = "\n\n".join(recent_contents) if recent_contents else ""
+        # Build weighted context - most recent entry gets more emphasis
+        context_parts = []
+        for i, (date, path) in enumerate(recent_entries):
+            content = entry_manager.read_entry(path)
+            if i == 0:  # Most recent
+                context_parts.append(f"## MOST RECENT ENTRY ({date.strftime('%Y-%m-%d')}):\n{content}")
+            else:
+                context_parts.append(f"## Earlier entry ({date.strftime('%Y-%m-%d')}):\n{content}")
+        
+        recent_text = "\n\n".join(context_parts) if context_parts else ""
+        logger.info(f"Context: {len(recent_text):,} chars from {len(recent_entries)} entries (weighted by recency)")
         
         prompt_count = 5 if is_sunday else 3
+        logger.info(f"Requesting {prompt_count} AI-generated prompts{' with focus: ' + focus if focus else ''}")
+        
         prompts = await analysis_engine.generate_reflection_prompts(
             recent_text, focus, prompt_count, is_sunday
         )
         
         if not prompts:
+            logger.warning("No AI prompts generated, using fallback prompts")
             prompts = self._get_fallback_prompts(is_sunday)
+        else:
+            logger.info(f"✓ Generated {len(prompts)} AI prompts successfully")
 
         return self._build_template(prompts, is_sunday)
     
@@ -82,14 +101,6 @@ class TemplateGenerator:
         template_parts.append("## 🧠 Brain Dump")
         template_parts.append("")
         template_parts.append("*Your thoughts, experiences, and observations...*")
-        template_parts.append("")
-        template_parts.append("")
-        template_parts.append("")
-        template_parts.append("---")
-        template_parts.append("")
-        template_parts.append("## 🧠 Memory Links")
-        template_parts.append("")
-        template_parts.append("*Temporal connections and topic tags will be auto-generated when you complete the entry.*")
 
         return "\n".join(template_parts)
 

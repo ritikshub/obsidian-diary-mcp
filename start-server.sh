@@ -13,6 +13,7 @@ export PYTHONUTF8=1
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 
+<<<<<<< HEAD
 # Environment variables from Claude Desktop (or fallback defaults)
 export DIARY_PATH="${DIARY_PATH:-/c/Users/Ritik Roushan/Documents/Obsidian Vault}"
 export OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
@@ -20,6 +21,15 @@ export OLLAMA_MODEL="${OLLAMA_MODEL:-gemma3:1b}"
 export OLLAMA_TIMEOUT="${OLLAMA_TIMEOUT:-30}"
 export OLLAMA_TEMPERATURE="${OLLAMA_TEMPERATURE:-0.7}"
 export OLLAMA_NUM_PREDICT="${OLLAMA_NUM_PREDICT:-200}"
+=======
+echo "Starting Obsidian Diary MCP Server...";
+echo "Logs: $LOG_FILE"
+echo "DIARY_PATH: ${DIARY_PATH:-default (~/Documents/diary)}"
+echo "PLANNER_PATH: ${PLANNER_PATH:-default (~/Documents/planner)}"
+
+# Explicitly print all environment variables being passed
+env | grep -E "DIARY_PATH|PLANNER_PATH|OLLAMA" >> "$LOG_FILE"
+>>>>>>> upstream
 
 echo "----------------------------------------"
 echo "Starting Obsidian Diary MCP Server..."
